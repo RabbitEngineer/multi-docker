@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+    
+before_install:
+    - docker build -t likeabosch/react-test -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run likeabosch/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t likeabosch/multi-client ./client   
+    - docker build -t likeabosch/multi-nginx ./nginx 
+    - docker build -t likeabosch/multi-server ./client
+    - docker build -t likeabosch/multi-worker ./worker       
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to docker hub
+    - docker push likeabosch/multi-client
+    - docker push likeabosch/multi-nginx
+    - docker push likeabosch/multi-server
+    - docker push likeabosch/multi-worker
